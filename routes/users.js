@@ -1,9 +1,19 @@
 var express = require('express');
 var router = express.Router();
 
-let users = [
-  {id: Date.now(), izena: "John", abizena: "Doe", email: "john@doe.com"},
-];
+const mongojs = require('mongojs')
+const db = mongojs('bezeroakdb', ['bezeroak'])
+
+
+let users = [];
+
+db.bezeroak.find( function (err, userdocs) {
+  if (err) {
+    console.log(err)
+  } else {
+    users = userdocs
+  }
+})
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
@@ -20,7 +30,14 @@ router.get('/list', function(req, res, next) {
 
 router.post("/new", (req, res) => {
   users.push(req.body);
-  res.json(users);
+  db.bezeroak.insert(req.body, function (err, user) {
+    if(err) {
+      console.log(err)
+    } else {
+      console.log(user)
+      res.json(user);
+    }
+  })
 });
 
 router.delete("/delete/:id", (req, res) => {
