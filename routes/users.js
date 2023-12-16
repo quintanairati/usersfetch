@@ -1,9 +1,9 @@
 var express = require('express');
 var router = express.Router();
 
-const mongojs = require('mongojs')
+const mongojs = require('mongojs');
+const { rawListeners } = require('../app');
 const db = mongojs('bezeroakdb', ['bezeroak'])
-
 
 let users = [];
 
@@ -51,6 +51,18 @@ router.put("/update/:id", (req, res) => {
   user.abizena = req.body.abizena;
   user.email = req.body.email;
   res.json(users);
+
+  // update user in mongo
+  db.bezeroak.update({ __id: mongojs.ObjectId(req.params.id) },
+    { $set: { izena: rawListeners.body.izena, abizena: req.body.abizena, email: req.body.email }},
+    function (err, user) {
+      if (err) {
+        console.log(err)
+      } else{
+        console.log(user)
+      }
+    })
+    res.json(users);
 })
 
 module.exports = router;
