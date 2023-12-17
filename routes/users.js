@@ -42,6 +42,15 @@ router.post("/new", (req, res) => {
 
 router.delete("/delete/:id", (req, res) => {
   users = users.filter(user => user.id != req.params.id);
+
+  // remove user from mongo
+  db.bezeroak.remove({ id: parseInt(req.params.id)}, function (err, user) {
+    if (err) {
+      console.log(err)
+    } else{
+      console.log(user)
+    }
+  })
   res.json(users);
 });
 
@@ -50,11 +59,10 @@ router.put("/update/:id", (req, res) => {
   user.izena = req.body.izena;
   user.abizena = req.body.abizena;
   user.email = req.body.email;
-  res.json(users);
 
   // update user in mongo
-  db.bezeroak.update({ __id: mongojs.ObjectId(req.params.id) },
-    { $set: { izena: rawListeners.body.izena, abizena: req.body.abizena, email: req.body.email }},
+  db.bezeroak.update({ id: parseInt(req.params.id) },
+    { $set: { izena: req.body.izena, abizena: req.body.abizena, email: req.body.email }},
     function (err, user) {
       if (err) {
         console.log(err)
