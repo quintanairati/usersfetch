@@ -2,11 +2,20 @@ let updateUser = (id) => {
     let row = document.getElementById(id);
     let izena = row.children[1].children[0].value;
     let abizena = row.children[2].children[0].value;
-    let email = row.children[3].children[0].value;
+    let avatar = row.children[3].children[0].files[0];
+    let email = row.children[4].children[0].value;
+
+    if(avatar){
+        avatar = avatar.name;
+    } else {
+        avatar = "NoImage.PNG";
+    }
+
     row.innerHTML = `
     <th scope="row">${id}</th>
     <td>${izena}</td>
     <td>${abizena}</td>
+    <td><img src="/uploads/${avatar}" alt="Avatar" style="width: 100px; height: 100px;"></td>
     <td>${email}</td>
     <td> <a onclick="deleteUser('${id}')">[x]</a> <a onclick="editUser('${id}')">[e]</a>  </td>
     `;
@@ -14,6 +23,7 @@ let updateUser = (id) => {
     let user = {
         izena: izena,
         abizena: abizena,
+        avatar: avatar,
         id: id,
         email: email
     }
@@ -32,17 +42,35 @@ let updateUser = (id) => {
     .catch((error) => {
         console.error('Error:', error);
     });
+
+    fetch(`/users/fitx`, {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(user),
+    })
+    .then(response => response.text())
+    .then(data => {
+        console.log(data);  // handle the response data or action
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+    });
+
 }
 
 let editUser = (id) => {
     let row = document.getElementById(id);
     let izena = row.children[1].innerHTML;
     let abizena = row.children[2].innerHTML;
-    let email = row.children[3].innerHTML;
+    let avatar = row.children[3].innerHTML;
+    let email = row.children[4].innerHTML;
     row.innerHTML = `
     <th scope="row">${id}</th>
     <td><input type="text" id="izena" value="${izena}"></td>
     <td><input type="text" id="abizena" value="${abizena}"></td>
+    <td><input type="file" id="avatar"></td>
     <td><input type="text" id="email" value="${email}"></td>
     <td> <input type="button" onclick="updateUser('${id}')" value="Save"> </td>
     `;
@@ -60,6 +88,7 @@ let insertUser = (user) => {
                 <th scope="row">${user.id}</th>
                 <td>${user.izena}</td>
                 <td>${user.abizena}</td>
+                <td><img src="/uploads/${user.avatar || 'NoImage.PNG'}" alt="Avatar" style="width: 100px; height: 100px;"></td>
                 <td>${user.email}</td>
                 <td><a onclick="deleteUser('${user.id}')">[x]</a> <a onclick="editUser('${user.id}')">[e]</a>  </td>
             `;
@@ -88,26 +117,35 @@ document.addEventListener("DOMContentLoaded", function () {
     let user = {
         izena: e.target.izena.value,
         abizena: e.target.abizena.value,
+        avatar: e.target.avatar.files[0],
         id: Date.now(),
         email: e.target.email.value
     }
 
-    insertUser(user);
+    if(user.avatar) {
+      user.avatar = user.avatar.name;
+    } else {
+      user.avatar = "NoImage.PNG";
+    }
 
-    fetch("/users/new", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(user),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log(data); // handle the response data or action
+    insertUser(user);
+      
+      var formData = new FormData(e.target);
+      
+      fetch("/users/new", {
+        method: "POST",
+        body: formData,
       })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          console.log(data);
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+        });
+  
   });
 
   // Sample JSON array of users
@@ -122,4 +160,5 @@ document.addEventListener("DOMContentLoaded", function () {
         insertUser(user);
       });
     });
+
 });
